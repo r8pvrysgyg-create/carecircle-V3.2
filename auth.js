@@ -5,61 +5,21 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-
-import { auth, db } from "./firebase.js";
-import { appState, emailToDocId } from "./state.js";
-
-// Add your main/admin Google account here before testing v3.2.
-// Example: const BOOTSTRAP_ADMIN_EMAILS = ["you@gmail.com"];
-const BOOTSTRAP_ADMIN_EMAILS = ["npringleco@gmail.com"];
+import { auth } from "./firebase.js";
 
 const provider = new GoogleAuthProvider();
 
-async function getOrCreateUserProfile(user) {
-  const email = emailToDocId(user.email);
-  const ref = doc(db, "users", email);
-  const existing = await getDoc(ref);
-
-  if (existing.exists()) {
-    const data = existing.data();
-    if (data.active === false) return null;
-    return { id: existing.id, ...data };
-  }
-
-  if (BOOTSTRAP_ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email)) {
-    const profile = {
-      email,
-      name: user.displayName || email,
-      role: "admin",
-      active: true,
-      createdAt: serverTimestamp(),
-      createdBy: "bootstrap"
-    };
-    await setDoc(ref, profile);
-    return { id: email, ...profile };
-  }
-
-  return null;
-}
+// Change this to your main Google email.
+const BOOTSTRAP_ADMIN_EMAILS = [
+  "npringleco@gmail.com"
+];
 
 export function setupAuth(onLogin, onLogout) {
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
-  const mobileLogoutBtn = document.getElementById("mobileLogoutBtn");
-  const unauthorizedLogoutBtn = document.getElementById("unauthorizedLogoutBtn");
   const userEmail = document.getElementById("userEmail");
-  const userRole = document.getElementById("userRole");
   const appContent = document.getElementById("appContent");
   const signedOutMessage = document.getElementById("signedOutMessage");
-  const unauthorizedMessage = document.getElementById("unauthorizedMessage");
-  const sidebar = document.getElementById("sidebar");
-  const menuBtn = document.getElementById("menuBtn");
 
   loginBtn.onclick = async () => {
     try {
@@ -70,54 +30,49 @@ export function setupAuth(onLogin, onLogout) {
     }
   };
 
-  const logout = async () => {
+  logoutBtn.onclick = async () => {
     await signOut(auth);
   };
 
-  logoutBtn.onclick = logout;
-  mobileLogoutBtn.onclick = logout;
-  unauthorizedLogoutBtn.onclick = logout;
-
-  onAuthStateChanged(auth, async user => {
+  onAuthStateChanged(auth, user => {
     if (user) {
-      const profile = await getOrCreateUserProfile(user);
+      const isBootstrapAdmin = BOOTSTRAP_ADMIN_EMAILS
+        .map(email => email.toLowerCase())
+        .includes(user.email.toLowerCase());
 
-      if (profile) {
-        appState.currentUserProfile = profile;
-        userEmail.textContent = user.email;
-        if (userRole) userRole.textContent = profile.role === "admin" ? "Admin" : "Family Member";
-        appContent.classList.remove("hidden");
-        sidebar.classList.remove("hidden");
-        menuBtn.classList.remove("hidden");
-        mobileLogoutBtn.classList.remove("hidden");
-        signedOutMessage.classList.add("hidden");
-        unauthorizedMessage.classList.add("hidden");
-        await onLogin(user, profile);
+      if (!isBootstrapAdmin) {
+        userEmail.textContent = user.email + " is not approved yet.";
+        loginBtn.classList.add("hidden");
+        logoutBtn.classList.remove("hidden");
+        appContent.classList.add("hidden");
+        signedOutMessage.classList.remove("hidden");
+        signedOutMessage.innerHTML = `
+          <h2>Access Pending</h2>
+          <p>This Google account is not approved for CareCircle yet.</p>
+        `;
+        onLogout();
         return;
       }
 
-      appState.currentUserProfile = null;
-      userEmail.textContent = "";
-      if (userRole) userRole.textContent = "";
-      appContent.classList.add("hidden");
-      sidebar.classList.add("hidden");
-      menuBtn.classList.add("hidden");
-      mobileLogoutBtn.classList.add("hidden");
+      userEmail.textContent = user.email;
+      loginBtn.classList.add("hidden");
+      logoutBtn.classList.remove("hidden");
+      appContent.classList.remove("hidden");
       signedOutMessage.classList.add("hidden");
-      unauthorizedMessage.classList.remove("hidden");
-      onLogout();
-      return;
-    }
 
-    appState.currentUserProfile = null;
-    userEmail.textContent = "";
-    if (userRole) userRole.textContent = "";
-    appContent.classList.add("hidden");
-    sidebar.classList.add("hidden");
-    menuBtn.classList.add("hidden");
-    mobileLogoutBtn.classList.add("hidden");
-    signedOutMessage.classList.remove("hidden");
-    unauthorizedMessage.classList.add("hidden");
-    onLogout();
+      onLogin(user);
+    } else {
+      userEmail.textContent = "";
+      loginBtn.classList.remove("hidden");
+      logoutBtn.classList.add("hidden");
+      appContent.classList.add("hidden");
+      signedOutMessage.classList.remove("hidden");
+      signedOutMessage.innerHTML = `
+        <h2>Please sign in</h2>
+        <p>Only approved family members can view or add information.</p>
+      `;
+
+      onLogout();
+    }
   });
 }
