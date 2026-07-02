@@ -17,7 +17,7 @@ import { appState, emailToDocId } from "./state.js";
 
 // Add your main/admin Google account here before testing v3.2.
 // Example: const BOOTSTRAP_ADMIN_EMAILS = ["you@gmail.com"];
-const BOOTSTRAP_ADMIN_EMAILS = [npringleco@gmail.com];
+const BOOTSTRAP_ADMIN_EMAILS = ["npringleco@gmail.com"];
 
 const provider = new GoogleAuthProvider();
 
