@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareCircle v3.2</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside id="sidebar" class="sidebar hidden">
+      <div class="brand">
+        <div class="brand-icon">🏡</div>
+        <div>
+          <h1>CareCircle</h1>
+          <p>Family care hub</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-link active" data-view="dashboard">🏠 Dashboard</button>
+        <button class="nav-link" data-view="appointments">📅 Appointments</button>
+        <button class="nav-link" data-view="tasks">✅ Tasks</button>
+        <button class="nav-link" data-view="notes">📝 Notes</button>
+        <button class="nav-link" data-view="family">👨‍👩‍👧 Family</button>
+        <button class="nav-link" data-view="admin" data-admin-only>🛡️ Admin</button>
+        <button class="nav-link" data-view="settings">⚙️ Settings</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span id="userEmail"></span>
+        <span id="userRole" class="role-badge"></span>
+        <button id="logoutBtn" class="secondary">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="mobile-topbar">
+        <button id="menuBtn" class="icon-btn hidden">☰</button>
+        <strong>CareCircle</strong>
+        <button id="mobileLogoutBtn" class="secondary hidden">Logout</button>
+      </header>
+
+      <section id="signedOutMessage" class="signed-out">
+        <div class="signed-out-card">
+          <h1>🏡 CareCircle</h1>
+          <h2>Please sign in</h2>
+          <p>Sign in with Google to view and update your family care dashboard.</p>
+          <button id="loginBtn">Sign in with Google</button>
+          <p class="muted small-text">Only approved family members should use this site.</p>
+        </div>
+      </section>
+
+      <section id="unauthorizedMessage" class="signed-out hidden">
+        <div class="signed-out-card">
+          <h1>Access not approved</h1>
+          <p>Your Google account is not currently approved for this CareCircle.</p>
+          <p class="muted small-text">Ask the site owner to add your email address in the Admin users list.</p>
+          <button id="unauthorizedLogoutBtn" class="secondary">Sign out</button>
+        </div>
+      </section>
+
+      <div id="appContent" class="hidden">
+        <section id="view-dashboard" class="view active">
+          <div class="hero-card">
+            <div>
+              <p class="eyebrow">Today’s overview</p>
+              <h2>Care Command Center</h2>
+              <p class="muted">A quick view of appointments, tasks, notes, and anything that needs attention.</p>
+            </div>
+            <div class="quick-actions">
+              <button data-jump="appointments">+ Appointment</button>
+              <button data-jump="tasks">+ Task</button>
+              <button data-jump="notes">+ Note</button>
+            </div>
+          </div>
+
+          <div class="search-card">
+            <input id="globalSearch" placeholder="Search appointments, tasks, notes, doctors, locations..." />
+            <div id="searchResults"></div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card"><span id="statToday">0</span><p>Today</p></div>
+            <div class="stat-card"><span id="statUpcoming">0</span><p>Upcoming</p></div>
+            <div class="stat-card"><span id="statOpenTasks">0</span><p>Open Tasks</p></div>
+            <div class="stat-card"><span id="statNotes">0</span><p>Notes</p></div>
+          </div>
+
+          <div class="grid-two">
+            <div class="card">
+              <h3>📅 Today’s appointments</h3>
+              <div id="todayAppointments"></div>
+            </div>
+            <div class="card">
+              <h3>✅ Open tasks</h3>
+              <div id="openTasks"></div>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="card">
+              <h3>📌 Upcoming appointments</h3>
+              <div id="upcomingAppointments"></div>
+            </div>
+            <div class="card">
+              <h3>📝 Recent notes</h3>
+              <div id="recentNotes"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>🕒 Activity timeline</h3>
+            <div id="activityFeed"></div>
+          </div>
+        </section>
+
+        <section id="view-appointments" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Doctor visits and care dates</p>
+              <h2>Appointments</h2>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Add appointment</h3>
+            <div class="form-grid">
+              <select id="apptPerson">
+                <option value="">Who is this for?</option>
+                <option value="Grandma">Grandma</option>
+                <option value="Grandpa">Grandpa</option>
+                <option value="Both">Both</option>
+              </select>
+              <input id="apptDoctor" placeholder="Doctor / Visit type" />
+              <input id="apptLocation" placeholder="Location" />
+              <input id="apptDriver" placeholder="Driver / Responsible person" />
+              <input id="apptDate" type="date" />
+              <input id="apptTime" type="time" />
+              <textarea id="apptNotes" placeholder="Notes"></textarea>
+            </div>
+            <button id="addAppt">Add Appointment</button>
+          </div>
+
+          <div class="card">
+            <h3>All appointments</h3>
+            <div id="appointments"></div>
+          </div>
+        </section>
+
+        <section id="view-tasks" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Shared responsibilities</p>
+              <h2>Tasks</h2>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Add task</h3>
+            <div class="form-grid">
+              <input id="taskTitle" placeholder="Task, e.g. Pick up prescription" />
+              <input id="taskAssignedTo" placeholder="Assigned to" />
+              <input id="taskDueDate" type="date" />
+              <select id="taskPerson">
+                <option value="">Related to</option>
+                <option value="Grandma">Grandma</option>
+                <option value="Grandpa">Grandpa</option>
+                <option value="Both">Both</option>
+              </select>
+              <textarea id="taskNotes" placeholder="Task notes"></textarea>
+            </div>
+            <button id="addTask">Add Task</button>
+          </div>
+
+          <div class="card">
+            <h3>All tasks</h3>
+            <div id="tasks"></div>
+          </div>
+        </section>
+
+        <section id="view-notes" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Family updates</p>
+              <h2>Notes</h2>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Add note</h3>
+            <select id="notePerson">
+              <option value="">Related to</option>
+              <option value="Grandma">Grandma</option>
+              <option value="Grandpa">Grandpa</option>
+              <option value="Both">Both</option>
+            </select>
+            <textarea id="noteInput" placeholder="Write a family update..."></textarea>
+            <button id="addNote">Add Note</button>
+          </div>
+
+          <div class="card">
+            <h3>All notes</h3>
+            <div id="notes"></div>
+          </div>
+        </section>
+
+        <section id="view-family" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Separated by person</p>
+              <h2>Family</h2>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="card profile-card">
+              <h3>👵 Grandma</h3>
+              <h4>Appointments</h4>
+              <div id="grandmaAppointments"></div>
+              <h4>Tasks</h4>
+              <div id="grandmaTasks"></div>
+              <h4>Notes</h4>
+              <div id="grandmaNotes"></div>
+            </div>
+
+            <div class="card profile-card">
+              <h3>👴 Grandpa</h3>
+              <h4>Appointments</h4>
+              <div id="grandpaAppointments"></div>
+              <h4>Tasks</h4>
+              <div id="grandpaTasks"></div>
+              <h4>Notes</h4>
+              <div id="grandpaNotes"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-admin" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Security and family access</p>
+              <h2>Administration</h2>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="card">
+              <h3>Add or update family member</h3>
+              <p class="muted">Only admins can add approved Google accounts.</p>
+              <div class="form-grid single-column">
+                <input id="adminUserEmail" placeholder="Google account email" />
+                <input id="adminUserName" placeholder="Display name" />
+                <select id="adminUserRole">
+                  <option value="family">Family Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <button id="addAdminUser">Save Family Member</button>
+            </div>
+
+            <div class="card">
+              <h3>How roles work</h3>
+              <p><strong>Admins</strong> can manage family access and delete records.</p>
+              <p><strong>Family members</strong> can add appointments, notes, and tasks, and complete tasks.</p>
+              <p class="muted">Your current role: <strong data-role-label></strong></p>
+            </div>
+          </div>
+
+          <div class="grid-two">
+            <div class="card">
+              <h3>Approved users</h3>
+              <div id="adminUsers"></div>
+            </div>
+
+            <div class="card">
+              <h3>Activity log</h3>
+              <div id="adminActivityLog"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-settings" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Access and setup</p>
+              <h2>Settings</h2>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>CareCircle v3.2</h3>
+            <p>Access is now managed from the Firestore <code>users</code> collection and the Admin screen.</p>
+            <p>If a Google account is not listed as an active user, it will be blocked after login.</p>
+            <p class="muted">Admins can add your mom, uncles, or your spare test account without editing code.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
